@@ -9,6 +9,21 @@ declare global {
   }
 }
 
+function loadScript(src: string) {
+  return new Promise<void>((resolve, reject) => {
+    const existing = document.querySelector(`script[src="${src}"]`);
+    if (existing) {
+      resolve();
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = src;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error("Failed to load " + src));
+    document.head.appendChild(script);
+  });
+}
+
 function Home() {
   const [ready, setReady] = useState(false);
 
@@ -19,7 +34,9 @@ function Home() {
     }
     let cancelled = false;
 
-    fetch("/songbook.html")
+    loadScript("/songbook-persist.js")
+      .catch(() => undefined)
+      .then(() => fetch("/songbook.html"))
       .then((res) => {
         if (!res.ok) throw new Error("Could not load songbook");
         return res.text();
